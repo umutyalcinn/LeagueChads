@@ -22,6 +22,29 @@ func New(apiKey string) ApiClient {
 	}
 }
 
+
+func (client *ApiClient) GetLeaguesBySummonerId(summonerId string) ([]models.League, error) {
+
+	url := fmt.Sprintf("https://tr1.api.riotgames.com/lol/league/v4/entries/by-summoner/%s", summonerId)
+
+	data, err := makeLeagueAPIRequest("GET", url, client.apiKey)
+
+	if(err != nil){
+		return nil, err
+	}
+
+	var leagues []models.League
+
+	err = json.Unmarshal([]byte(data), &leagues)
+
+	if(err != nil){
+		log.Printf("%s", err)
+		return nil, err
+	}
+
+	return leagues, nil
+}
+
 func (client *ApiClient) GetAllChampions() ([]models.Champion, error) {
 
 	data, err := makeLeagueAPIRequest("GET", "https://ddragon.leagueoflegends.com/cdn/14.3.1/data/en_US/champion.json", client.apiKey)

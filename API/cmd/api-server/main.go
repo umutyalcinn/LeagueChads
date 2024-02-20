@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/gin-contrib/cors"
 )
 
 var client riotClient.ApiClient
@@ -24,18 +25,41 @@ func main() {
 
 	api_key := os.Getenv("API_KEY")
 
-	log.Printf("%s", api_key)
-
 	client = riotClient.New(api_key)
 
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"0"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowOriginFunc: func(origin string) bool {
+			return origin == "https://github.com"
+		},
+	}))
 
 	router.GET("/freechamps", getFreeChampionRotation)
 	router.GET("/champions", getAllChampions)
 	router.GET("/champions/:key", getChampionByKey)
 	router.GET("/summoner", getSummonerByName)
+	router.GET("/leagues/:summonerid", getLeaguesBySummonerId)
 
 	router.Run("localhost:8080")
+}
+
+func getLeaguesBySummonerId(c *gin.Context) {
+
+	summonerId := c.Param("summonerid")
+
+	leagues, err := client.GetLeaguesBySummonerId(summonerId)
+
+	if(err != nil){
+		log.Fatal("Error getting leagues")
+	}
+
+	c.IndentedJSON(http.StatusOK, leagues)
 }
 
 func getSummonerByName(c *gin.Context) {
@@ -50,7 +74,7 @@ func getSummonerByName(c *gin.Context) {
 	summoner, err := client.GetSummonerByName(summonerName)
 
 	if(err != nil){
-		log.Fatal("Error getting free champion rotation")
+		log.Fatal("Error getting summoner")
 	}
 
 	c.IndentedJSON(http.StatusOK, summoner)
