@@ -8,4 +8,5 @@ type Summoner struct {
 	ProfileIconId uint32 `json:"profileIconId"`
 	RevisionDate uint64 `json:"revisionDate"`
 	SummonerLevel uint32 `json:"summonerLevel"`
+    MatchHistory []MatchSummary `json:"matchHistory"`
 }

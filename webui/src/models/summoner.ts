@@ -1,3 +1,5 @@
+import MatchSummary from "./matchSummary";
+
 export default interface Summoner {
     id: string,
     accountId: string,
@@ -6,4 +8,5 @@ export default interface Summoner {
     profileIconId: number,
     revisionDate: number,
     summonerLevel: number,
+    matchHistory: MatchSummary[]
 };

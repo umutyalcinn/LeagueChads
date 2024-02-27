@@ -6,11 +6,13 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/umutyalcinn/leaguechadsapi/internal/models"
 	riotClient "github.com/umutyalcinn/leaguechadsapi/internal/riot-client"
+	parse "github.com/umutyalcinn/leaguechadsapi/internal/riot-parse"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/gin-contrib/cors"
 )
 
 var client riotClient.ApiClient
@@ -43,20 +45,59 @@ func main() {
 	router.GET("/freechamps", getFreeChampionRotation)
 	router.GET("/champions", getAllChampions)
 	router.GET("/champions/:key", getChampionByKey)
-	router.GET("/summoner", getSummonerByName)
-	router.GET("/leagues/:summonerid", getLeaguesBySummonerId)
+    router.GET("/getSummonerByName/:summonerName", getSummonerByName)
+    router.GET("/getSummonerByPuuid/:puuid", getSummonerByPuuid)
+	router.GET("/leagues/:summonerId", getLeaguesBySummonerId)
+
+	router.GET("/matchHistory/:puuid", getMatchHistoryByPuuid)
+	router.GET("/match/:matchId", getMatchByMatchId)
 
 	router.Run("localhost:8080")
 }
 
+func getMatchHistoryByPuuid(c *gin.Context){
+	puuid := c.Param("puuid")
+
+    countQuery, ok := c.GetQuery("count")
+
+	if(!ok){
+		c.String(http.StatusBadRequest, "Please provide count query param")
+		return
+	}
+
+    count, err := strconv.Atoi(countQuery)
+
+	if(err != nil){
+        c.String(http.StatusBadRequest, "Invalid count query param")
+        return
+	}
+
+    matchHistory, err := client.GetMatchHistoryByPuuid(puuid, uint8(count))
+
+    c.IndentedJSON(http.StatusOK, matchHistory)
+}
+
+func getMatchByMatchId(c *gin.Context) {
+
+	matchId := c.Param("matchId")
+
+	match, err := client.GetMatchByMatchId(matchId)
+
+	if(err != nil){
+		log.Fatal("Error getting match")
+	}
+
+	c.IndentedJSON(http.StatusOK, match)
+}
+
 func getLeaguesBySummonerId(c *gin.Context) {
 
-	summonerId := c.Param("summonerid")
+	summonerId := c.Param("summonerId")
 
 	leagues, err := client.GetLeaguesBySummonerId(summonerId)
 
 	if(err != nil){
-		log.Fatal("Error getting leagues")
+		log.Printf("Error getting leagues")
 	}
 
 	c.IndentedJSON(http.StatusOK, leagues)
@@ -64,17 +105,58 @@ func getLeaguesBySummonerId(c *gin.Context) {
 
 func getSummonerByName(c *gin.Context) {
 
-	summonerName, ok := c.GetQuery("summonername")
-
-	if(!ok){
-		c.String(http.StatusBadRequest, "Please provide summonername query param")
-		return
-	}
+	summonerName := c.Param("summonerName")
 
 	summoner, err := client.GetSummonerByName(summonerName)
 
 	if(err != nil){
-		log.Fatal("Error getting summoner")
+		log.Printf("Error getting summoner by name")
+	}
+
+    matchHistory, err := client.GetMatchHistoryByPuuid(summoner.Puuid, 20)
+
+    if(err != nil){
+		log.Printf("Error getting match history by name")
+        c.String(http.StatusInternalServerError, "Error getting history by name")
+        return
+    }
+
+    matchSummaries := make([]models.MatchSummary, 0, 20)
+
+    for _, v := range matchHistory{
+        matchData, err := client.GetMatchByMatchId(v)
+
+        if(err != nil){
+            log.Printf("Error getting match")
+            c.String(http.StatusInternalServerError, "Error getting")
+            return
+        }
+
+        summary, err := parse.MatchSummary(summoner, matchData)
+
+        if(err != nil){
+            log.Printf("Error parsing match summary")
+            c.String(http.StatusInternalServerError, "Error parsing match summary")
+            return
+        }
+
+        matchSummaries = append(matchSummaries, *summary)
+
+    }
+
+    summoner.MatchHistory = matchSummaries
+
+	c.IndentedJSON(http.StatusOK, summoner)
+}
+
+func getSummonerByPuuid(c *gin.Context) {
+
+    puuid := c.Param("puuid")
+
+	summoner, err := client.GetSummonerByPuuid(puuid)
+
+	if(err != nil){
+		log.Printf("Error getting summoner by puuid")
 	}
 
 	c.IndentedJSON(http.StatusOK, summoner)

@@ -1,10 +1,11 @@
+// TODO: General fetch function by given url returns data
+
 package riotclient
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 
@@ -22,6 +23,71 @@ func New(apiKey string) ApiClient {
 	}
 }
 
+func (client *ApiClient) GetMatchByMatchId(matchId string) (map[string]interface{}, error) {
+	url := fmt.Sprintf("https://europe.api.riotgames.com/lol/match/v5/matches/%s", matchId)
+
+	data, err := makeLeagueAPIRequest("GET", url, client.apiKey)
+
+	if(err != nil){
+		return nil, err
+	}
+
+	var match map[string]interface{}
+
+	err = json.Unmarshal([]byte(data), &match)
+
+	if(err != nil){
+		return nil, err
+	}
+
+    return match, nil
+
+    /*
+
+    var metadata, _ = match["metadata"] 
+
+    metadataMap := metadata.(map[string]interface{})
+
+    participants, _ := metadataMap["participants"]
+
+    participantList := participants.([]interface{})
+
+    var summonerList = make([]models.Summoner, 0, 10)
+
+    for _, v := range participantList {
+        summoner, err := client.GetSummonerByPuuid(v.(string))
+
+        if(err != nil){
+            return nil, err
+        }
+
+        summonerList = append(summonerList, *summoner)
+    } 
+
+	return summonerList, nil
+
+    */
+}
+
+func (client *ApiClient) GetMatchHistoryByPuuid(puuid string, count uint8) ([]string, error) {
+	url := fmt.Sprintf("https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/%s/ids?start=0&count=%d", puuid, count)
+
+	data, err := makeLeagueAPIRequest("GET", url, client.apiKey)
+    
+	if(err != nil){
+		return nil, err
+	}
+
+	var matchHistory []string
+
+	err = json.Unmarshal([]byte(data), &matchHistory)
+
+	if(err != nil){
+		return nil, err
+	}
+
+	return matchHistory, nil
+}
 
 func (client *ApiClient) GetLeaguesBySummonerId(summonerId string) ([]models.League, error) {
 
@@ -38,7 +104,6 @@ func (client *ApiClient) GetLeaguesBySummonerId(summonerId string) ([]models.Lea
 	err = json.Unmarshal([]byte(data), &leagues)
 
 	if(err != nil){
-		log.Printf("%s", err)
 		return nil, err
 	}
 
@@ -81,7 +146,28 @@ func (client *ApiClient) GetSummonerByName(summonerName string) (*models.Summone
 		return nil, err
 	}
 
-	log.Printf("%s", string(data))
+	var summoner models.Summoner
+
+	err = json.Unmarshal([]byte(data), &summoner)
+
+	if(err != nil){
+		return nil, err
+	}
+
+	return &summoner, nil
+}
+
+func (client *ApiClient) GetSummonerByPuuid(puuid string) (*models.Summoner, error) {
+
+	queryString := strings.ReplaceAll(puuid, " ", "%20")
+
+	url := fmt.Sprintf("https://tr1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/%s", queryString)
+
+	data, err := makeLeagueAPIRequest("GET", url, client.apiKey)
+
+	if(err != nil){
+		return nil, err
+	}
 
 	var summoner models.Summoner
 
