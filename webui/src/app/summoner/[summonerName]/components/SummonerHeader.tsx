@@ -6,7 +6,7 @@ export type SummonerHeaderProps = {
 export default function SummonerHeader({props}: {props: SummonerHeaderProps}){
     console.log(props.summonerIcon)
     return(
-        <div className="flex items-center">
+        <div className="flex items-center gap-8">
             <img 
                 src={props.summonerIcon}
                 alt={props.summonerName}

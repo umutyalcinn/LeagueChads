@@ -15,4 +15,5 @@ export default interface MatchSummary {
     item2IconUrl: string,
     item3IconUrl: string,
     item4IconUrl: string,
+    gameMode: string
 };

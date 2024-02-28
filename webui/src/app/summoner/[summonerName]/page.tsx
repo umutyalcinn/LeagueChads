@@ -4,7 +4,7 @@ import MatchSummaryRow from "./components/MatchSummaryRow";
 import MatchSummary from "@/models/matchSummary";
 
 async function getData(summonerName: string){
-    const res = await fetch(`http://localhost:8080/getSummonerByName/${summonerName}`);
+    const res = await fetch(`http://localhost:8080/getSummonerByName/${summonerName}`, { cache: "no-cache"});
 
     if(!res.ok){
         throw new Error("Error fetching data");

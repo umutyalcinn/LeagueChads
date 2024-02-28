@@ -41,6 +41,8 @@ func MatchSummary(summoner *models.Summoner, matchData map[string]interface{}) (
 
     infoMap := info.(map[string]interface{})
 
+    gameMode, _ := infoMap["gameMode"]
+
     participants, _ := infoMap["participants"]
 
     participantList := participants.([]interface{})
@@ -84,6 +86,7 @@ func MatchSummary(summoner *models.Summoner, matchData map[string]interface{}) (
                 Item3IconUrl: fmt.Sprintf("https://ddragon.leagueoflegends.com/cdn/14.4.1/img/item/%d.png", uint32(item3.(float64))),
                 Item4IconUrl: fmt.Sprintf("https://ddragon.leagueoflegends.com/cdn/14.4.1/img/item/%d.png", uint32(item4.(float64))),
                 Item5IconUrl: fmt.Sprintf("https://ddragon.leagueoflegends.com/cdn/14.4.1/img/item/%d.png", uint32(item5.(float64))),
+                GameMode: gameMode.(string),
             }, nil
         }
     }

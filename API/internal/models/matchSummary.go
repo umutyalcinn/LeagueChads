@@ -18,4 +18,5 @@ type MatchSummary struct{
     Item3IconUrl string `json:"item3IconUrl"`
     Item4IconUrl string `json:"item4IconUrl"`
     Item5IconUrl string `json:"item5IconUrl"`
+    GameMode string `json:"gameMode"`
 }
