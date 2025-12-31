@@ -37,3 +37,5 @@ webui/.vercel
 # typescript
 webui/*.tsbuildinfo
 webui/next-env.d.ts
+
+**/.DS_Store

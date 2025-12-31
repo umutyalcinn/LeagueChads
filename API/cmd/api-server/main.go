@@ -52,7 +52,7 @@ func main() {
 	router.GET("/matchHistory/:puuid", getMatchHistoryByPuuid)
 	router.GET("/match/:matchId", getMatchByMatchId)
 
-	router.Run("localhost:8080")
+	router.Run("192.168.1.101:8080")
 }
 
 func getMatchHistoryByPuuid(c *gin.Context){
